@@ -13,7 +13,7 @@ than hidden.
 
 `Python 3.11` · `pandas` · `SQLite` · `Streamlit` — clone, `pip install -r requirements.txt`, `streamlit run dashboard/app.py`. The warehouse builds itself on first run.
 
-**[Live dashboard →](https://PLACEHOLDER.streamlit.app)**
+**[Live dashboard →](https://local-medallion-pipeline-wxygnwrnsjwxyuvnn4wp6g.streamlit.app/)**
 
 ![Data coverage tab of the analytics dashboard, showing 175,858 source rows landed, 99.1–100% single-table coverage, 0.13% cross-table join coverage, and quality status by business process](docs/dashboard.png)
 
