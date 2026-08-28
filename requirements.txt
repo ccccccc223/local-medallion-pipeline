@@ -1,0 +1,4 @@
+# Local medallion pipeline and dashboard.
+# Python 3.11 or later. sqlite3 is part of the standard library.
+pandas>=2.0
+streamlit>=1.30

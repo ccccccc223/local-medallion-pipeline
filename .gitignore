@@ -1,0 +1,10 @@
+.DS_Store
+__MACOSX/
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+.agents/
+.claude/
+database/*.db
