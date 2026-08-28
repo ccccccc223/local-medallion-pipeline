@@ -12,11 +12,14 @@ before reading anything else.
 
 Run:  streamlit run dashboard/app.py
 
+The database is built on first run if it does not exist.
 Set ANALYTICS_DB_PATH to point at a database elsewhere.
 """
 
 import os
 import sqlite3
+import subprocess
+import sys
 
 import pandas as pd
 import streamlit as st
@@ -35,6 +38,42 @@ GOLD_TABLES = [
 ]
 
 st.set_page_config(page_title="Medallion Analytics", layout="wide")
+
+BUILD_SCRIPTS = ("load_bronze.py", "build_silver.py", "build_gold.py")
+
+
+@st.cache_resource(show_spinner=False)
+def ensure_database():
+    """Build the warehouse from the source CSVs if it isn't there yet.
+
+    The pipeline is idempotent and the database is a build artefact, not
+    source, so a fresh deployment reconstructs it rather than shipping it.
+    Runs against DB_PATH, including a custom ANALYTICS_DB_PATH.
+    """
+    if os.path.exists(DB_PATH):
+        return
+
+    os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
+    progress = st.progress(0.0, text="Building the warehouse from source CSVs…")
+
+    for i, script in enumerate(BUILD_SCRIPTS):
+        progress.progress(i / len(BUILD_SCRIPTS), text=f"Running {script}…")
+        result = subprocess.run(
+            [sys.executable, os.path.join(PROJECT_ROOT, "src", script)],
+            cwd=PROJECT_ROOT,
+            capture_output=True,
+            text=True,
+        )
+        if result.returncode != 0:
+            progress.empty()
+            st.error(f"{script} failed")
+            st.code(result.stderr or result.stdout)
+            st.stop()
+
+    progress.empty()
+
+
+ensure_database()
 
 
 @st.cache_data(show_spinner=False)
@@ -80,13 +119,6 @@ def weighted_mean(frame, value_column, weight_column):
         return 0.0
     return float((frame[value_column] * weights).sum() / weights.sum())
 
-
-if not os.path.exists(DB_PATH):
-    st.error(f"No database at {DB_PATH}. Run the pipeline first:\n\n"
-             "```\npython src/load_bronze.py\n"
-             "python src/build_silver.py\n"
-             "python src/build_gold.py\n```")
-    st.stop()
 
 try:
     tables = load_gold(DB_PATH, os.path.getmtime(DB_PATH))
